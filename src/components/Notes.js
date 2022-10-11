@@ -2,16 +2,26 @@ import React, { useContext, useEffect, useState, useRef } from "react";
 import noteContext from "../context/notes/noteContext";
 import Noteitem from "./Noteitem";
 import Addnote from "./Addnote";
+import { useHistory } from "react-router-dom";
 
-const Notes = () => {
+const Notes = (props) => {
+  
   const context = useContext(noteContext);
-  const { notes, getNotes } = context;
+  let history = useHistory();
+  const { notes, getNotes, editNote } = context;
   useEffect(() => {
-    getNotes();
+    if(localStorage.getItem('token')){
+      getNotes();
+    }
+    else{
+      history.push("/login")
+    }
     // eslint-disable-next-line
   }, []);
   const ref = useRef(null)
+  const refClose = useRef(null)
   const [note, setNote] = useState({
+    id:"",
     etitle: "",
     edescription: "",
     etag: "",
@@ -19,14 +29,16 @@ const Notes = () => {
 
   const updateNote = (currentNote) => {
     ref.current.click();
-    setNote({etitle: currentNote.title, edescription: currentNote.description, etag: currentNote.etag,});
+    setNote({id: currentNote._id, etitle: currentNote.title, edescription: currentNote.description, etag: currentNote.etag,});
   };
 
   
 
   const handleClick = (e) => {
     console.log("Updateing the notes...", note)
-    e.preventDefault();
+    editNote(note.id, note.etitle, note.edescription, note.etag)
+    refClose.current.click();
+    props.showAlert("Updated Successfully", "success")
   };
 
   const onChange = (e) => {
@@ -34,7 +46,7 @@ const Notes = () => {
   };
   return (
     <>
-      <Addnote />
+      <Addnote showAlert={props.showAlert} />
 
       <button type="button" class="btn btn-primary d-none" data-bs-toggle="modal" data-bs-target="#exampleModal" ref={ref}>
           Launch demo modal
@@ -73,6 +85,8 @@ const Notes = () => {
               value={note.etitle}
               onChange={onChange}
               aria-describedby="emailHelp"
+              minLength={5}
+              required
             />
             <div id="emailHelp" className="form-text"></div>
           </div>
@@ -87,6 +101,8 @@ const Notes = () => {
               name="edescription"
               onChange={onChange}
               value={note.edescription}
+              minLength={5}
+              required
             />
           </div>
           <div className="mb-3">
@@ -109,10 +125,11 @@ const Notes = () => {
                 type="button"
                 className="btn btn-secondary"
                 data-bs-dismiss="modal"
+                ref={refClose}
               >
                 Close
               </button>
-              <button type="button" className="btn btn-primary" onClick={handleClick}>
+              <button disabled={note.etitle.length > 5 || note.edescription.length>5} type="button" className="btn btn-primary" onClick={handleClick}>
                 Update Note
               </button>
             </div>
@@ -121,9 +138,12 @@ const Notes = () => {
       </div>
       <div className="row my-3">
         <h2>Your Notes</h2>
+        <div className="container mx-2">
+          {notes.length===0 && 'No notes to display'}
+        </div>
         {notes.map((note) => {
           return (
-            <Noteitem key={note._id} updateNote={updateNote} note={note} />
+            <Noteitem key={note._id} updateNote={updateNote} showAlert={props.showAlert}note={note} />
           );
         })}
       </div>

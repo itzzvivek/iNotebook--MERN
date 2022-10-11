@@ -2,18 +2,20 @@ import React, { useContext, useState } from "react";
 import Notes from "./Notes";
 import noteContext from "../context/notes/noteContext";
 
-const Addnote = () => {
+const Addnote = (props) => {
   const context = useContext(noteContext);
   const { addNote } = context;
   const [note, setNote] = useState({
     title: "",
     description: "",
-    tag: "default",
+    tag: "",
   })
 
   const handleClick = (e) => {
     e.preventDefault();
     addNote(note.title, note.description, note.tag);
+    setNote({title:"", description:"",tag:""})
+    props.showAlert("Added Successfully", "success")
   };
 
   const onChange = (e) => {
@@ -34,6 +36,9 @@ const Addnote = () => {
               id="title"
               name="title"
               aria-describedby="emailHelp"
+              minLength={5}
+              required
+              value={note.title}
             />
             <div id="emailHelp" className="form-text"></div>
           </div>
@@ -47,6 +52,9 @@ const Addnote = () => {
               id="description"
               name="description"
               onChange={onChange}
+              minLength={5}
+              required
+              value={note.description}
             />
           </div>
           <div className="mb-3">
@@ -59,9 +67,13 @@ const Addnote = () => {
               id="tag"
               name="tag"
               onChange={onChange}
+              minLength={5}
+              required
+              value={note.tag}
             />
           </div>
           <button
+            disabled={note.title.length>5 || note.description.length>5}
             type="submit"
             className="btn btn-primary"
             onClick={handleClick}
